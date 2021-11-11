@@ -7,6 +7,7 @@
 #include <QList>
 #include <map>
 #include <vector>
+#include <stack>
 
 using namespace std;
 
@@ -15,7 +16,7 @@ PlayWindow::PlayWindow(QWidget *parent) :
     ui(new Ui::PlayWindow)
 {
     ui->setupUi(this);
-    QPixmap pix(":/images/images/blackjack_table.png");
+    QPixmap pix(":/images/images/blackjack_table.png"); //사진 바
     ui->tableLabel->setPixmap(pix);
     ui->tableLabel->lower();
     ui->stickButton_2->setEnabled(false);
@@ -343,7 +344,7 @@ void PlayWindow::on_twistButton_clicked()//클릭할대마다..카드 10개 생�
 
 
 
-void PlayWindow::on_card1Label_10_linkActivated(const QString &link,스택받아오기)//여기서 카드값 보여줌
+void PlayWindow::on_card1Label_10_linkActivated(const QString &link,stack<int> get_stack);//여기서 카드값 보여줌
 {
     //스택중에 첫번째 스택에 담긴 값을 label에 띄움
     ui->playercurrentLabel->setText("Current Card: " + QString::number(deckValues[number-1]));
