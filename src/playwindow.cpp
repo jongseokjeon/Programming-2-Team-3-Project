@@ -7,7 +7,8 @@
 #include <QList>
 #include <map>
 #include <vector>
-#include <stack>
+
+#include <algorithm>
 
 using namespace std;
 
@@ -16,31 +17,32 @@ PlayWindow::PlayWindow(QWidget *parent) :
     ui(new Ui::PlayWindow)
 {
     ui->setupUi(this);
-    QPixmap pix(":/images/images/blackjack_table.png"); //사진 바꿔야 할듯 ㅋㅋㅋㅋ
+    QPixmap pix(":/images/images/blackjack_table.png");
     ui->tableLabel->setPixmap(pix);
     ui->tableLabel->lower();
-    ui->stickButton_2->setEnabled(false);
+    ui->okaybutton->setEnabled(false); // the name must be changed to ok button
     this->statusBar()->setSizeGripEnabled(false);
     this->setFixedSize(800,500);
-
 
     loadList();
 }
 
 
-static int player_score = 0;
-static int computer_score = 0;
+// declaring global variables
+//static int player_score = 0;
+//static int computer_score = 0;
 int computer_wins = 0;
 int player_wins = 0;
 int holdingCardCount = 1;
 int holdingCardCountComputer = 1;
 
+// load cards
 void PlayWindow::loadList(){
 
     // Clear List
     cardHolder.clear();
 
-    // Load in Spades
+    // Load in blue cards
     QPixmap card1(":/images/images/cards/b1.png");
     QPixmap card2(":/images/images/cards/b2.png");
     QPixmap card3(":/images/images/cards/b3.png");
@@ -118,8 +120,7 @@ void PlayWindow::loadList(){
     QPixmap card103(":/images/images/cards/b103.png");
     QPixmap card104(":/images/images/cards/b104.png");
 
-    // Load in Hearts
-
+    // Load in green cards
     QPixmap card5(":/images/images/cards/g5.png");
     QPixmap card15(":/images/images/cards/g15.png");
     QPixmap card25(":/images/images/cards/g25.png");
@@ -130,6 +131,7 @@ void PlayWindow::loadList(){
     QPixmap card85(":/images/images/cards/g85.png");
     QPixmap card95(":/images/images/cards/g95.png");
 
+    // Load in yellow cards
     QPixmap card10(":/images/images/cards/y10.png");
     QPixmap card20(":/images/images/cards/y20.png");
     QPixmap card30(":/images/images/cards/y30.png");
@@ -140,8 +142,8 @@ void PlayWindow::loadList(){
     QPixmap card80(":/images/images/cards/y80.png");
     QPixmap card90(":/images/images/cards/y90.png");
     QPixmap card100(":/images/images/cards/y100.png");
-    // Load in clubs
 
+    // Load in pink cards
     QPixmap card11(":/images/images/cards/p11.png");
     QPixmap card22(":/images/images/cards/p22.png");
     QPixmap card33(":/images/images/cards/p33.png");
@@ -151,11 +153,10 @@ void PlayWindow::loadList(){
     QPixmap card88(":/images/images/cards/p88.png");
     QPixmap card99(":/images/images/cards/p99.png");
 
-    // Load in diamonds
-
+    // Load in the red card
     QPixmap card55(":/images/images/cards/r55.png");
 
-    // add Spades to List
+    // add all cards to List
     cardHolder.append(card1);
     cardHolder.append(card2);
     cardHolder.append(card3);
@@ -169,8 +170,6 @@ void PlayWindow::loadList(){
     cardHolder.append(card11);
     cardHolder.append(card12);
     cardHolder.append(card13);
-
-    // add Hearts to List
     cardHolder.append(card14);
     cardHolder.append(card15);
     cardHolder.append(card16);
@@ -184,8 +183,6 @@ void PlayWindow::loadList(){
     cardHolder.append(card24);
     cardHolder.append(card25);
     cardHolder.append(card26);
-
-    // add clubs to List
     cardHolder.append(card27);
     cardHolder.append(card28);
     cardHolder.append(card29);
@@ -199,8 +196,6 @@ void PlayWindow::loadList(){
     cardHolder.append(card37);
     cardHolder.append(card38);
     cardHolder.append(card39);
-
-    // add Diamonds to List
     cardHolder.append(card40);
     cardHolder.append(card41);
     cardHolder.append(card42);
@@ -214,7 +209,6 @@ void PlayWindow::loadList(){
     cardHolder.append(card50);
     cardHolder.append(card51);
     cardHolder.append(card52);
-
     cardHolder.append(card53);
     cardHolder.append(card54);
     cardHolder.append(card55);
@@ -267,9 +261,6 @@ void PlayWindow::loadList(){
     cardHolder.append(card102);
     cardHolder.append(card103);
     cardHolder.append(card104);
-
-
-
 }
 
 
@@ -278,213 +269,344 @@ PlayWindow::~PlayWindow()
     delete ui;
 }
 
-void PlayWindow::on_twistButton_clicked()//클릭할대마다..카드 10개 생성
+
+// global deck value variable 생성 , 사용할 random index 생성
+int deckValues[104] = {1, 2, 3,	4,	5,	6,	7,	8,	9,	10,	11,	12,	13,	14,	15,	16,	17,	18,	19,	20,	21,	22,	23,	24,	25,	26,	27,	28,	29,	30,	31,	32,	33,	34,	35,	36,	37,	38,	39,	40,	41,	42,	43,	44,	45,	46,	47,	48,	49,	50,	51,	52,	53,	54,	55,	56,	57,	58,	59,	60,	61,	62,	63,	64,	65,	66,	67,	68,	69,	70,	71,	72,	73,	74,	75,	76,	77,	78,	79,	80,	81,	82,	83,	84,	85,	86,	87,	88,	89,	90,	91,	92,	93,	94,	95,	96,	97,	98,	99,	100,	101,	102,	103,	104};
+
+// 클릭할 때 유저 카드10개, 컴터 10개, 보드 4개 생성
+void PlayWindow::on_twistButton_clicked()
 {
-    int deckValues[104] = {1,2,	3,	4,	5,	6,	7,	8,	9,	10,	11,	12,	13,	14,	15,	16,
-                           17,	18,	19,	20,	21,	22,	23,	24,	25,	26,	27,	28,	29,	30,	31,	32,
-                           33,	34,	35,	36,	37,	38,	39,	40,	41,	42,	43,	44,	45,	46,	47,	48,
-                           49,	50,	51,	52,	53,	54,	55,	56,	57,	58,	59,	60,	61,	62,	63,	64,
-                           65,	66,	67,	68,	69,	70,	71,	72,	73,	74,	75,	76,	77,	78,	79,	80,
-                           81,	82,	83,	84,	85,	86,	87,	88,	89,	90,	91,	92,	93,	94,	95,	96,
-                           97,	98,	99,	100,	101,	102,	103,	104};
 
-    vector<int>vector;
-    int number = rand() % 104;
-    ui->playercurrentLabel->setText("Current Card: " + QString::number(deckValues[number-1]));
-    player_score += deckValues[number-1];
-    ui->playertotalLabel->setText("Total: " + QString::number(player_score));
+    // 여기에다가 경기 진행될 때 사용자의 점수 실시간으로 반영하는 기능으로 만들면 좋을듯
+//    ui->playercurrentLabel->setText("Current Card: " + QString::number(deckValues[number-1]));
+//    player_score += deckValues[number-1];
+//    ui->playertotalLabel->setText("Total: " + QString::number(player_score));
 
-    // Which position should the Card be drawn.
-    switch(holdingCardCount){
-    case 1:
-        ui->card1Label_10->setPixmap(cardHolder.at(number - 1));
-        vector[0]=deckValues[number-1];//버튼 누르면 카드가 자동생성되는데 그 value를 따로 담을 곳 필요.
-        break;
-    case 2:
-        ui->card2Label_10->setPixmap(cardHolder.at(number - 1));
-        vector[1]=deckValues[number-1];
-        break;
-    case 3:
-        ui->card3Label_10->setPixmap(cardHolder.at(number - 1));
-        vector[2]=deckValues[number-1];
-        break;
-    case 4:
-        ui->card4Label_10->setPixmap(cardHolder.at(number - 1));
-        vector[3]=deckValues[number-1];
-        break;
-    case 5:
-        ui->card5Label_10->setPixmap(cardHolder.at(number - 1));
-        vector[4]=deckValues[number-1];
-        break;
-    case 6:
-        ui->card6Label_10->setPixmap(cardHolder.at(number - 1));
-        vector[5]=deckValues[number-1];
-        break;
-    case 7:
-        ui->card7Label_2->setPixmap(cardHolder.at(number - 1));
-        vector[6]=deckValues[number-1];
-        break;
-    case 8:
-        ui->card8Label_2->setPixmap(cardHolder.at(number - 1));
-        vector[7]=deckValues[number-1];
-        break;
-    case 9:
-        ui->card9Label_2->setPixmap(cardHolder.at(number - 1));
-        vector[8]=deckValues[number-1];
-        break;
-    case 10:
-        ui->card10Label_2->setPixmap(cardHolder.at(number - 1));
-        vector[9]=deckValues[number-1];
-        break;
 
-    }
+    // 카드 생성 버튼 (twist) 클릭했을 때
+
+    // create vector that stores user's hand
+    std::vector<int> userVector;
+    // create vector that stores computer's hand
+    std::vector<int> computerVector;
+    // create 4 vectors that stores the cards on the board - 나중에 백터 사용하려면 이렇게 따로 백터에 저장해야 될 듯
+    std::vector<int> boardVector1;
+    std::vector<int> boardVector2;
+    std::vector<int> boardVector3;
+    std::vector<int> boardVector4;
+
+    // random index edit
+    int number = 0;
+
+    // user's deck
+    number = rand() % 104;
+    ui->card1Label_10->setPixmap(cardHolder.at(number - 1));
+    userVector[0]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card2Label_10->setPixmap(cardHolder.at(number - 1));
+    userVector[1]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card4Label_10->setPixmap(cardHolder.at(number - 1));
+    userVector[2]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card3Label_10->setPixmap(cardHolder.at(number - 1));
+    userVector[3]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card5Label_10->setPixmap(cardHolder.at(number - 1));
+    userVector[4]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card6Label_10->setPixmap(cardHolder.at(number - 1));
+    userVector[5]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card7Label_2->setPixmap(cardHolder.at(number - 1));
+    userVector[6]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card8Label_2->setPixmap(cardHolder.at(number - 1));
+    userVector[7]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card9Label_2->setPixmap(cardHolder.at(number - 1));
+    userVector[8]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card10Label_2->setPixmap(cardHolder.at(number - 1));
+    userVector[9]=deckValues[number-1];
+
+    // computer's deck
+    number = rand() % 104;
+    ui->card1Label_11->setPixmap(cardHolder.at(number - 1));
+    userVector[0]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card2Label_11->setPixmap(cardHolder.at(number - 1));
+    userVector[1]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card4Label_11->setPixmap(cardHolder.at(number - 1));
+    userVector[2]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card3Label_11->setPixmap(cardHolder.at(number - 1));
+    userVector[3]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card5Label_11->setPixmap(cardHolder.at(number - 1));
+    userVector[4]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card6Label_11->setPixmap(cardHolder.at(number - 1));
+    userVector[5]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card7Label_3->setPixmap(cardHolder.at(number - 1));
+    userVector[6]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card8Label_3->setPixmap(cardHolder.at(number - 1));
+    userVector[7]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card9Label_3->setPixmap(cardHolder.at(number - 1));
+    userVector[8]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card10Label_3->setPixmap(cardHolder.at(number - 1));
+    userVector[9]=deckValues[number-1];
+    // make computer's hand not show on board
+    ui->card1Label_11->setVisible(false);
+    ui->card2Label_11->setVisible(false);
+    ui->card4Label_11->setVisible(false);
+    ui->card3Label_11->setVisible(false);
+    ui->card5Label_11->setVisible(false);
+    ui->card6Label_11->setVisible(false);
+    ui->card7Label_3->setVisible(false);
+    ui->card8Label_3->setVisible(false);
+    ui->card9Label_3->setVisible(false);
+    ui->card10Label_3->setVisible(false);
+
+
+    // store 4 cards on board in each board vector
+    number = rand() % 104;
+    ui->card1Label_6->setPixmap(cardHolder.at(number - 1));
+    boardVector1[0]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card1Label_7->setPixmap(cardHolder.at(number - 1));
+    boardVector2[0]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card1Label_9->setPixmap(cardHolder.at(number - 1));
+    boardVector3[0]=deckValues[number-1];
+    number = rand() % 104;
+    ui->card1Label_8->setPixmap(cardHolder.at(number - 1));
+    boardVector4[0]=deckValues[number-1];
+
+
+//    // Which position should the Card be drawn.
+//    switch(holdingCardCount){
+//    case 1:
+//        ui->card1Label_10->setPixmap(cardHolder.at(number - 1));
+//        vector[0]=deckValues[number-1];//버튼 누르면 카드가 자동생성되는데 그 value를 따로 담을 곳 필요.
+//        break;
+//    case 2:
+//        ui->card2Label_10->setPixmap(cardHolder.at(number - 1));
+//        vector[1]=deckValues[number-1];
+//        break;
+//    case 3:
+//        ui->card3Label_10->setPixmap(cardHolder.at(number - 1));
+//        vector[2]=deckValues[number-1];
+//        break;
+//    case 4:
+//        ui->card4Label_10->setPixmap(cardHolder.at(number - 1));
+//        vector[3]=deckValues[number-1];
+//        break;
+//    case 5:
+//        ui->card5Label_10->setPixmap(cardHolder.at(number - 1));
+//        vector[4]=deckValues[number-1];
+//        break;
+//    case 6:
+//        ui->card6Label_10->setPixmap(cardHolder.at(number - 1));
+//        vector[5]=deckValues[number-1];
+//        break;
+//    case 7:
+//        ui->card7Label_2->setPixmap(cardHolder.at(number - 1));
+//        vector[6]=deckValues[number-1];
+//        break;
+//    case 8:
+//        ui->card8Label_2->setPixmap(cardHolder.at(number - 1));
+//        vector[7]=deckValues[number-1];
+//        break;
+//    case 9:
+//        ui->card9Label_2->setPixmap(cardHolder.at(number - 1));
+//        vector[8]=deckValues[number-1];
+//        break;
+//    case 10:
+//        ui->card10Label_2->setPixmap(cardHolder.at(number - 1));
+//        vector[9]=deckValues[number-1];
+//        break;
+//    }
+
     // increment Card Count for position
     ++holdingCardCount;
 
-    QPixmap win(":/images/images/win.png");
-    QPixmap lose(":/images/images/lose.png");
-    QPixmap draw(":/images/images/draw.png");
+//    QPixmap win(":/images/images/win.png");
+//    QPixmap lose(":/images/images/lose.png");
+//    QPixmap draw(":/images/images/draw.png");
 
-    return //value10
-
-
-
-
-
-void PlayWindow::on_card1Label_10_linkActivated(const QString &link, stack<int> get_stack);//여기서 카드값 보여줌
-{
-    //스택중에 첫번째 스택에 담긴 값을 label에 띄움  get_stack.top()
-    ui->playercurrentLabel->setText("Current Card: " + QString::number(deckValues[number-1]));
+    return; //value10
 }
 
-void PlayWindow::computerTurn(){
-        QPixmap win(":/images/images/win.png");
-        QPixmap lose(":/images/images/lose.png");
-        QPixmap draw(":/images/images/draw.png");
 
-        int computer_score = 0;
-        while (computer_score < 16){
-            computer_score += rand() % 10 + 1;
+// 랜덤 4 버튼 클릭했을 때 - 기능이 중복되는 것 같음
 
-            ui->computercurrentLabel->setText("Computer: " + QString::number(computer_score));
+//void PlayWindow::on_four_random_card_clicked()
+//{
+//    int deckValues[52] = {1,2,3,4,5,6,7,8,9,10,10,10,10,1,2,3,4,5,6,7,8,9,10,10,10,10,1,2,3,4,5,6,7,8,9,10,10,10,10,1,2,3,4,5,6,7,8,9,10,10,10,10};
 
-                switch(holdingCardCountComputer){
-                    case 1:
-                        ui->card10Label_2->setPixmap(cardHolder.at(computer_score - 1));
-                        break;
-                    case 2:
-                        ui->card9Label_2->setPixmap(cardHolder.at(computer_score - 1));
-                        break;
-                    case 3:
-                        ui->card8Label_2->setPixmap(cardHolder.at(computer_score - 1));
-                        break;
-                    case 4:
-                        ui->card7Label_2->setPixmap(cardHolder.at(computer_score - 1));
-                        break;
-                    case 5:
-                        ui->card6Label_2->setPixmap(cardHolder.at(computer_score - 1));
-                        break;
-                    case 6:
-                        ui->card5Label_2->setPixmap(cardHolder.at(computer_score - 1));
-                        break;
-                    case 7:
-                        ui->card4Label_2->setPixmap(cardHolder.at(computer_score - 1));
-                        break;
-                    case 8:
-                        ui->card3Label_2->setPixmap(cardHolder.at(computer_score - 1));
-                        break;
-                    case 9:
-                        ui->card2Label_2->setPixmap(cardHolder.at(computer_score - 1));
-                        break;
-                    case 10:
-                        ui->card1Label_2->setPixmap(cardHolder.at(computer_score - 1));
-                        break;
-                }
-                ++holdingCardCountComputer;
-        }
+//    int number = rand() % 52;
+
+//    switch(holdingCardCount){
+//    case 1:
+//        ui->first_of_four->setPixmap(cardHolder.at(number - 1));
+//        deckValues[number-1];//버튼 누르면 카드가 자동생성되는데 그 value를 따로 담을 곳 필요.
+//        break;
+//    case 2:
+//        ui->second_of_four->setPixmap(cardHolder.at(number - 1));
+//        deckValues[number-1];
+//        break;
+//    case 3:
+//        ui->third_of_four->setPixmap(cardHolder.at(number - 1));
+//        deckValues[number-1];
+//        break;
+//    case 4:
+//        ui->four_of_four->setPixmap(cardHolder.at(number - 1));
+//        deckValues[number-1];
+//        break;
+//    }
+//}
 
 
+//void PlayWindow::on_card1Label_10_linkActivated(const QString &link,스택받아오기)//여기서 카드값 보여줌
+//{
+//    //스택중에 첫번째 스택에 담긴 값을 label에 띄움
+//    ui->playercurrentLabel->setText("Current Card: " + QString::number(deckValues[number-1]));
+//}
 
 
-        //if computer is bust  //컴퓨터 turn에 카드 비교가 필요하네.
-        if (computer_score > player_score ){
-            computer_score를 젤 끝에 있는 카드들이랑 먼저 비교(처음이라면 처음4장 카드들과 비교하게 될것)
-            ui바꾸고.computer카드 놓는거
-            젤 끝에 있는 카드들이랑 player_score를 비교해서
-            ui바꾸고 player카드 놓는거
-        } else{
-            player_score를 맨 앞의 네장 카드들이랑 먼저비교
-            ui바꾸고.player카드 놓는거
-            젤 끝에 있는 카드들이랑 computer_score를 비교해서
-            ui바꾸고 computer카드 놓는거
-        }
-        // if same score or both bust
-        if ((computer_score == player_score) || ((computer_score > 21) && (player_score > 21))){
-            ui->outcomeLabel->setPixmap(draw);
-        }
-        // if both players are not bust AND computer is larger than player
-        else if (((computer_score < 22) && (player_score < 22) && (computer_score > player_score)) || ((player_score > 21) && computer_score < 22 )){
-            ui->outcomeLabel->setPixmap(lose);;
-            ++computer_wins;
-        }
-        // else, player wins
-        else{
-            ui->outcomeLabel->setPixmap(win);
-            ++player_wins;
-        }
-        ui->statusbar->showMessage("Player " + QString::number(player_wins) + " - Gamescore - " + "Computer " + QString::number(computer_wins));
-        this->setEnabled(true);
-    }
+//void PlayWindow::computerTurn(){
+//        QPixmap win(":/images/images/win.png");
+//        QPixmap lose(":/images/images/lose.png");
+//        QPixmap draw(":/images/images/draw.png");
+
+//        int computer_score = 0;
+//        while (computer_score < 16){
+//            computer_score += rand() % 10 + 1;
+
+//            ui->computercurrentLabel->setText("Computer: " + QString::number(computer_score));
+
+//                switch(holdingCardCountComputer){
+//                    case 1:
+//                        ui->card10Label_2->setPixmap(cardHolder.at(computer_score - 1));
+//                        break;
+//                    case 2:
+//                        ui->card9Label_2->setPixmap(cardHolder.at(computer_score - 1));
+//                        break;
+//                    case 3:
+//                        ui->card8Label_2->setPixmap(cardHolder.at(computer_score - 1));
+//                        break;
+//                    case 4:
+//                        ui->card7Label_2->setPixmap(cardHolder.at(computer_score - 1));
+//                        break;
+//                    case 5:
+//                        ui->card6Label_2->setPixmap(cardHolder.at(computer_score - 1));
+//                        break;
+//                    case 6:
+//                        ui->card5Label_2->setPixmap(cardHolder.at(computer_score - 1));
+//                        break;
+//                    case 7:
+//                        ui->card4Label_2->setPixmap(cardHolder.at(computer_score - 1));
+//                        break;
+//                    case 8:
+//                        ui->card3Label_2->setPixmap(cardHolder.at(computer_score - 1));
+//                        break;
+//                    case 9:
+//                        ui->card2Label_2->setPixmap(cardHolder.at(computer_score - 1));
+//                        break;
+//                    case 10:
+//                        ui->card1Label_2->setPixmap(cardHolder.at(computer_score - 1));
+//                        break;
+//                }
+//                ++holdingCardCountComputer;
+//        }
 
 
+//        //if computer is bust  //컴퓨터 turn에 카드 비교가 필요하네.
+//        if (computer_score > player_score ){
+//            computer_score를 젤 끝에 있는 카드들이랑 먼저 비교(처음이라면 처음4장 카드들과 비교하게 될것)
+//            ui바꾸고.computer카드 놓는거
+//            젤 끝에 있는 카드들이랑 player_score를 비교해서
+//            ui바꾸고 player카드 놓는거
+//        } else{
+//            player_score를 맨 앞의 네장 카드들이랑 먼저비교
+//            ui바꾸고.player카드 놓는거
+//            젤 끝에 있는 카드들이랑 computer_score를 비교해서
+//            ui바꾸고 computer카드 놓는거
+//        }
+//        // if same score or both bust
+//        if ((computer_score == player_score) || ((computer_score > 21) && (player_score > 21))){
+//            ui->outcomeLabel->setPixmap(draw);
+//        }
+//        // if both players are not bust AND computer is larger than player
+//        else if (((computer_score < 22) && (player_score < 22) && (computer_score > player_score)) || ((player_score > 21) && computer_score < 22 )){
+//            ui->outcomeLabel->setPixmap(lose);;
+//            ++computer_wins;
+//        }
+//        // else, player wins
+//        else{
+//            ui->outcomeLabel->setPixmap(win);
+//            ++player_wins;
+//        }
+//        ui->statusbar->showMessage("Player " + QString::number(player_wins) + " - Gamescore - " + "Computer " + QString::number(computer_wins));
+//        this->setEnabled(true);
+//    }
+
+
+// computer function
 void PlayWindow::on_okaybutton_clicked()
 {
     computerTurn();
 }
 
 
-void PlayWindow::on_playagainButton_clicked()
-{
-    //Clear Labels and Variables
-    player_score = 0;
-    computer_score = 0;
-    holdingCardCount = 1;
-    holdingCardCountComputer = 1;
+//void PlayWindow::on_playagainButton_clicked()
+//{
+//    //Clear Labels and Variables
+//    player_score = 0;
+//    computer_score = 0;
+//    holdingCardCount = 1;
+//    holdingCardCountComputer = 1;
 
-    ui->playercurrentLabel->setText("Card: " + QString::number(0));
-    ui->playertotalLabel->setText("Total: " + QString::number(0));
+//    ui->playercurrentLabel->setText("Card: " + QString::number(0));
+//    ui->playertotalLabel->setText("Total: " + QString::number(0));
 
-    ui->twistButton->setEnabled(true);
-    ui->playagainButton->setEnabled(false);
-    ui->stickButton->setEnabled(false);
-    ui->outcomeLabel->clear();
-    ui->computerStatusLabel->setText("");
-    ui->statusLabel->setText("");
-    ui->computerScoreLabel->setText("Computer: " + QString::number(0));
+//    ui->twistButton->setEnabled(true);
+//    ui->playagainButton->setEnabled(false);
+//    ui->stickButton->setEnabled(false);
+//    ui->outcomeLabel->clear();
+//    ui->computerStatusLabel->setText("");
+//    ui->statusLabel->setText("");
+//    ui->computerScoreLabel->setText("Computer: " + QString::number(0));
 
-    // Clear Cards from player table
-    ui->card1Label->clear();
-    ui->card2Label->clear();
-    ui->card3Label->clear();
-    ui->card4Label->clear();
-    ui->card5Label->clear();
-    ui->card6Label->clear();
-    ui->card8Label->clear();
-    ui->card9Label->clear();
-    ui->card10Label->clear();
+//    // Clear Cards from player table
+//    ui->card1Label->clear();
+//    ui->card2Label->clear();
+//    ui->card3Label->clear();
+//    ui->card4Label->clear();
+//    ui->card5Label->clear();
+//    ui->card6Label->clear();
+//    ui->card8Label->clear();
+//    ui->card9Label->clear();
+//    ui->card10Label->clear();
 
-    ui->card10Label_2->clear();
-    ui->card9Label_2->clear();
-    ui->card8Label_2->clear();
-    ui->card7Label_2->clear();
-    ui->card6Label_2->clear();
-    ui->card5Label_2->clear();
-    ui->card4Label_2->clear();
-    ui->card3Label_2->clear();
-    ui->card2Label_2->clear();
-    ui->card1Label_2->clear();
+//    ui->card10Label_2->clear();
+//    ui->card9Label_2->clear();
+//    ui->card8Label_2->clear();
+//    ui->card7Label_2->clear();
+//    ui->card6Label_2->clear();
+//    ui->card5Label_2->clear();
+//    ui->card4Label_2->clear();
+//    ui->card3Label_2->clear();
+//    ui->card2Label_2->clear();
+//    ui->card1Label_2->clear();
 
-}
+//}
 
 void PlayWindow::on_actionQuit_triggered()
 {
@@ -492,39 +614,4 @@ void PlayWindow::on_actionQuit_triggered()
 }
 
 
-
-
-
-
-void PlayWindow::on_four_random_card_clicked()
-{
-    int deckValues[52] = {1,2,3,4,5,6,7,8,9,10,10,10,10,1,2,3,4,5,6,7,8,9,10,10,10,10,1,2,3,4,5,6,7,8,9,10,10,10,10,1,2,3,4,5,6,7,8,9,10,10,10,10};
-
-    int number = rand() % 52;
-
-    switch(holdingCardCount){
-    case 1:
-        ui->first_of_four->setPixmap(cardHolder.at(number - 1));
-        deckValues[number-1];//버튼 누르면 카드가 자동생성되는데 그 value를 따로 담을 곳 필요.
-        break;
-    case 2:
-        ui->second_of_four->setPixmap(cardHolder.at(number - 1));
-        deckValues[number-1];
-        break;
-    case 3:
-        ui->third_of_four->setPixmap(cardHolder.at(number - 1));
-        deckValues[number-1];
-        break;
-    case 4:
-        ui->four_of_four->setPixmap(cardHolder.at(number - 1));
-        deckValues[number-1];
-        break;
-    }
-}
-
-
-void PlayWindow::on_okaybutton_clicked()
-{
-
-}
 
