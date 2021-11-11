@@ -33,6 +33,7 @@ private slots:
 
 
     void on_okaybutton_clicked();
+    void on_card1Label_10_linkActivated();
 
 private:
     Ui::PlayWindow *ui;
