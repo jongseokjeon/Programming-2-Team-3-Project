@@ -16,7 +16,7 @@ PlayWindow::PlayWindow(QWidget *parent) :
     ui(new Ui::PlayWindow)
 {
     ui->setupUi(this);
-    QPixmap pix(":/images/images/blackjack_table.png"); //사진 바
+    QPixmap pix(":/images/images/blackjack_table.png"); //사진 바꿔야 할듯 ㅋㅋㅋㅋ
     ui->tableLabel->setPixmap(pix);
     ui->tableLabel->lower();
     ui->stickButton_2->setEnabled(false);
@@ -280,7 +280,14 @@ PlayWindow::~PlayWindow()
 
 void PlayWindow::on_twistButton_clicked()//클릭할대마다..카드 10개 생성
 {
-    int deckValues[104] = {1,2,	3,	4,	5,	6,	7,	8,	9,	10,	11,	12,	13,	14,	15,	16,	17,	18,	19,	20,	21,	22,	23,	24,	25,	26,	27,	28,	29,	30,	31,	32,	33,	34,	35,	36,	37,	38,	39,	40,	41,	42,	43,	44,	45,	46,	47,	48,	49,	50,	51,	52,	53,	54,	55,	56,	57,	58,	59,	60,	61,	62,	63,	64,	65,	66,	67,	68,	69,	70,	71,	72,	73,	74,	75,	76,	77,	78,	79,	80,	81,	82,	83,	84,	85,	86,	87,	88,	89,	90,	91,	92,	93,	94,	95,	96,	97,	98,	99,	100,	101,	102,	103,	104};
+    int deckValues[104] = {1,2,	3,	4,	5,	6,	7,	8,	9,	10,	11,	12,	13,	14,	15,	16,
+                           17,	18,	19,	20,	21,	22,	23,	24,	25,	26,	27,	28,	29,	30,	31,	32,
+                           33,	34,	35,	36,	37,	38,	39,	40,	41,	42,	43,	44,	45,	46,	47,	48,
+                           49,	50,	51,	52,	53,	54,	55,	56,	57,	58,	59,	60,	61,	62,	63,	64,
+                           65,	66,	67,	68,	69,	70,	71,	72,	73,	74,	75,	76,	77,	78,	79,	80,
+                           81,	82,	83,	84,	85,	86,	87,	88,	89,	90,	91,	92,	93,	94,	95,	96,
+                           97,	98,	99,	100,	101,	102,	103,	104};
+
     vector<int>vector;
     int number = rand() % 104;
     ui->playercurrentLabel->setText("Current Card: " + QString::number(deckValues[number-1]));
@@ -344,9 +351,9 @@ void PlayWindow::on_twistButton_clicked()//클릭할대마다..카드 10개 생�
 
 
 
-void PlayWindow::on_card1Label_10_linkActivated(const QString &link,stack<int> get_stack);//여기서 카드값 보여줌
+void PlayWindow::on_card1Label_10_linkActivated(const QString &link, stack<int> get_stack);//여기서 카드값 보여줌
 {
-    //스택중에 첫번째 스택에 담긴 값을 label에 띄움
+    //스택중에 첫번째 스택에 담긴 값을 label에 띄움  get_stack.top()
     ui->playercurrentLabel->setText("Current Card: " + QString::number(deckValues[number-1]));
 }
 
